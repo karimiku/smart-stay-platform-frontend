@@ -36,6 +36,9 @@ export function KeyPage() {
 
   // 予約開始日に基づいてアクティブな鍵をフィルタリング
   const now = new Date();
+  // 今日の日付のみを取得（時刻を00:00:00に設定）
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
   const activeKeys = (keys || []).filter((key) => {
     // キーのプロパティが存在することを確認
     if (!key || !key.valid_from || !key.valid_until) {
@@ -44,7 +47,13 @@ export function KeyPage() {
     try {
       const validFrom = new Date(key.valid_from);
       const validUntil = new Date(key.valid_until);
-      return now >= validFrom && now <= validUntil;
+      
+      // 日付のみで比較（時刻を00:00:00に設定）
+      const validFromDate = new Date(validFrom.getFullYear(), validFrom.getMonth(), validFrom.getDate());
+      const validUntilDate = new Date(validUntil.getFullYear(), validUntil.getMonth(), validUntil.getDate());
+      
+      // 今日が有効期間内（開始日以降、終了日以前）であれば表示
+      return today >= validFromDate && today <= validUntilDate;
     } catch {
       return false;
     }
