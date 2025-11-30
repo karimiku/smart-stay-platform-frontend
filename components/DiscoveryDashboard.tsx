@@ -2,16 +2,18 @@
 
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import Masonry from "react-responsive-masonry";
-import { MapPin, Users, Search, Filter, X, SlidersHorizontal } from "lucide-react";
+import { MapPin, Users, Search, Filter, X, SlidersHorizontal, Calendar } from "lucide-react";
 import { Property, properties } from "@/lib/data";
 import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Reservation } from "@/lib/api";
 
 interface DiscoveryDashboardProps {
   onSelectVilla: (property: Property) => void;
+  reservations?: Reservation[];
 }
 
-export function DiscoveryDashboard({ onSelectVilla }: DiscoveryDashboardProps) {
+export function DiscoveryDashboard({ onSelectVilla, reservations = [] }: DiscoveryDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
@@ -125,6 +127,22 @@ export function DiscoveryDashboard({ onSelectVilla }: DiscoveryDashboardProps) {
     (minBedrooms > 0 ? 1 : 0) +
     (minCapacity > 0 ? 1 : 0);
 
+  // 日付をフォーマット
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Invalid Date";
+      return date.toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch {
+      return "Invalid Date";
+    }
+  };
+
   const PropertyCard = ({ property }: { property: Property }) => (
     <div
       onClick={() => onSelectVilla(property)}
@@ -212,6 +230,61 @@ export function DiscoveryDashboard({ onSelectVilla }: DiscoveryDashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* 予約情報セクション */}
+      {reservations.length > 0 && (
+        <div className="border-b border-border px-4 sm:px-8 md:px-16 py-6 sm:py-8">
+          <div className="mb-6">
+            <h2 className="text-white uppercase tracking-[0.2em] mb-2 text-lg sm:text-xl">My Reservations</h2>
+            <p className="text-muted-foreground tracking-wide text-sm">予約済みのヴィラ</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {reservations.map((reservation) => {
+              const property = properties.find((p) => p.id === reservation.room_id.toString());
+              return (
+                <div
+                  key={reservation.id}
+                  className="bg-card border border-white/20 p-6 hover:border-white/40 transition-all"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-white uppercase tracking-[0.2em] mb-1">
+                        {property?.name || `Room ${reservation.room_id}`}
+                      </h3>
+                      <p className="text-muted-foreground text-sm tracking-wide">
+                        {property?.location || "Location N/A"}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 uppercase tracking-widest text-xs ${
+                      reservation.status === "CONFIRMED" 
+                        ? "bg-green-500 text-black" 
+                        : reservation.status === "PENDING"
+                        ? "bg-yellow-500 text-black"
+                        : "bg-muted text-muted-foreground"
+                    }`}>
+                      {reservation.status}
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="w-4 h-4" />
+                      <span className="tracking-wide">
+                        {formatDate(reservation.start_date)} - {formatDate(reservation.end_date)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                      <span className="text-muted-foreground tracking-wide">Total</span>
+                      <span className="text-white tracking-wide">
+                        ¥{reservation.total_price?.toLocaleString() || "0"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Properties Grid */}
       <div className="px-4 sm:px-8 md:px-16 py-6 sm:py-8 md:py-12">

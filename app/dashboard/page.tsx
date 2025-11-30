@@ -7,14 +7,16 @@ import { Property } from "@/lib/data";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { isAuthenticated } from "@/lib/auth";
+import { getReservations, Reservation } from "@/lib/api";
 
 export default function Dashboard() {
   const router = useRouter();
   const [selectedVilla, setSelectedVilla] = useState<Property | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndFetchData = async () => {
       try {
         const authenticated = await isAuthenticated();
         if (!authenticated) {
@@ -22,8 +24,16 @@ export default function Dashboard() {
           router.push("/login");
           return;
         }
-        // 認証済みの場合のみローディング解除
         setIsCheckingAuth(false);
+        
+        // 認証後に予約情報を取得
+        try {
+          const data = await getReservations();
+          setReservations(data.reservations || []);
+        } catch (err) {
+          console.error("Failed to fetch reservations:", err);
+          setReservations([]);
+        }
       } catch (err) {
         console.error("Auth check failed:", err);
         // エラー時もローディング表示せずに即座にログインページへ
@@ -31,7 +41,7 @@ export default function Dashboard() {
       }
     };
 
-    checkAuth();
+    checkAuthAndFetchData();
   }, [router]);
 
   const handleSelectVilla = (property: Property) => {
@@ -62,7 +72,10 @@ export default function Dashboard() {
         onBackToHome={() => router.push("/")}
       />
       <MobileNav currentPage="dashboard" />
-      <DiscoveryDashboard onSelectVilla={handleSelectVilla} />
+      <DiscoveryDashboard 
+        onSelectVilla={handleSelectVilla}
+        reservations={reservations}
+      />
     </div>
   );
 }
