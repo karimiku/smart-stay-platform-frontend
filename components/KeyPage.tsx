@@ -18,10 +18,14 @@ export function KeyPage() {
           getKeys(),
           getReservations(),
         ]);
-        setKeys(keysData.keys);
-        setReservations(reservationsData.reservations);
+        // デフォルト値を設定してnull/undefinedを防ぐ
+        setKeys(keysData?.keys || []);
+        setReservations(reservationsData?.reservations || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "データの取得に失敗しました");
+        // エラー時も空配列を設定
+        setKeys([]);
+        setReservations([]);
       } finally {
         setLoading(false);
       }
@@ -32,34 +36,65 @@ export function KeyPage() {
 
   // 予約開始日に基づいてアクティブな鍵をフィルタリング
   const now = new Date();
-  const activeKeys = keys.filter((key) => {
-    const validFrom = new Date(key.valid_from);
-    const validUntil = new Date(key.valid_until);
-    return now >= validFrom && now <= validUntil;
+  const activeKeys = (keys || []).filter((key) => {
+    // キーのプロパティが存在することを確認
+    if (!key || !key.valid_from || !key.valid_until) {
+      return false;
+    }
+    try {
+      const validFrom = new Date(key.valid_from);
+      const validUntil = new Date(key.valid_until);
+      return now >= validFrom && now <= validUntil;
+    } catch {
+      return false;
+    }
   });
 
   // 鍵に対応する予約情報を取得
   const getReservationForKey = (reservationId: string) => {
-    return reservations.find((r) => r.id === reservationId);
+    if (!reservations || !Array.isArray(reservations) || !reservationId) {
+      return undefined;
+    }
+    return reservations.find((r) => r && r.id === reservationId);
   };
 
   // 日付をフォーマット
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    if (!dateString) {
+      return "N/A";
+    }
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Invalid Date";
+      }
+      return date.toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch {
+      return "Invalid Date";
+    }
   };
 
   // 泊数を計算
   const calculateNights = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    if (!startDate || !endDate) {
+      return 0;
+    }
+    try {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return 0;
+      }
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    } catch {
+      return 0;
+    }
   };
 
   if (loading) {
@@ -193,7 +228,7 @@ export function KeyPage() {
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground tracking-wide">Total Price</span>
                         <span className="text-white tracking-wide">
-                          ¥{reservation.total_price.toLocaleString()}
+                          ¥{reservation.total_price ? reservation.total_price.toLocaleString() : "0"}
                         </span>
                       </div>
                     </div>
