@@ -7,6 +7,7 @@ import { Property, properties } from "@/lib/data";
 import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Reservation } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 interface DiscoveryDashboardProps {
   onSelectVilla: (property: Property) => void;
@@ -14,6 +15,7 @@ interface DiscoveryDashboardProps {
 }
 
 export function DiscoveryDashboard({ onSelectVilla, reservations = [] }: DiscoveryDashboardProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
@@ -244,7 +246,8 @@ export function DiscoveryDashboard({ onSelectVilla, reservations = [] }: Discove
               return (
                 <div
                   key={reservation.id}
-                  className="bg-card border border-white/20 p-6 hover:border-white/40 transition-all"
+                  onClick={() => router.push(`/reservation/${reservation.id}`)}
+                  className="bg-card border border-white/20 p-6 hover:border-white/40 transition-all cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div>
