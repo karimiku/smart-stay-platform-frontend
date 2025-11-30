@@ -68,7 +68,11 @@ export default function ReservationDetail() {
   const property = properties.find((p) => p.id === reservation.room_id.toString());
 
   return (
-    <div className="dark min-h-screen bg-background">
+    <div
+      className={`dark min-h-screen bg-background ${
+        isAuthenticated ? "md:pl-20" : ""
+      }`}
+    >
       {isAuthenticated && (
         <>
           <Sidebar
