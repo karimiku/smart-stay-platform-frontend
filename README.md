@@ -2,9 +2,6 @@
 
 Smart Stay Platform のフロントエンドアプリケーションです。Next.js、React、TypeScript を使用して構築されています。
 
-## 🌐 デモ
-
-\*_サイト_: [https://smart-stay-dusky.vercel.app](https://smart-stay-dusky.vercel.app)
 
 ![Smart Stay Platform Home](./public/home.png)
 
