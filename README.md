@@ -5,7 +5,7 @@ Smart Stay Platform のフロントエンドアプリケーションです。Nex
 ![Smart Stay Platform Home](./public/home.png)
 
 ##デモ動画
-[デモサイト](smart-stay-platform-frontend.vercel.app)
+[デモサイト](https://smart-stay-platform-frontend.vercel.app)
 
 ## 📖 プロジェクト概要
 
